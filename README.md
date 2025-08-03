@@ -1,5 +1,3 @@
-Parfait, voici un **fichier knowledge complet** et structuré pour ton application web de chasse et collection de monstres. Il est rédigé pour servir de base technique et fonctionnelle au développement.
-
 ---
 
 ## 📂 Knowledge – Application Web de Chasse aux Monstres
