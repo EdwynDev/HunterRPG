@@ -473,4 +473,278 @@ CREATE TABLE artefacts (
     effet TEXT NOT NULL,
     rarete ENUM('commun','rare','epique','legendaire') NOT NULL
 );
+
+
+-- Insertion des rangs de guilde
+INSERT INTO guildes (rang, exp_requise) VALUES
+('F', 0),
+('E', 100),
+('D', 250),
+('C', 500),
+('B', 1000),
+('A', 2000),
+('S', 5000),
+('SS', 10000),
+('SSS', 20000),
+('Ex', 50000);
+
+-- Insertion des statuts de créature
+INSERT INTO statuts_creatures (nom, multiplicateur_stats) VALUES
+('Normal', 1.0),
+('Élite', 1.2),
+('Alpha', 1.5),
+('Boss', 2.0);
+
+-- Insertion des créatures
+INSERT INTO creatures (nom, rarete, niveau_max, description) VALUES
+('Gobelin', 'commun', 20, 'Petit monstre agressif vivant en groupe.'),
+('Loup', 'peu_commun', 25, 'Prédateur rapide et féroce.'),
+('Griffon', 'rare', 40, 'Créature majestueuse mi-lion mi-aigle.'),
+('Dragon', 'epique', 60, 'Bête légendaire crachant du feu.'),
+('Phénix', 'legendaire', 70, 'Oiseau mythique renaissant de ses cendres.');
+
+-- Insertion de ressources
+INSERT INTO ressources (nom, description) VALUES
+('Peau de gobelin', 'Matériau de base pour l'artisanat.'),
+('Griffe de loup', 'Utilisée pour fabriquer des armes légères.'),
+('Plume de griffon', 'Ressource rare utilisée pour des objets magiques.'),
+('Écaille de dragon', 'Matériau solide pour armures puissantes.'),
+('Cendre de phénix', 'Ingrédient mythique pour des potions de résurrection.'),
+('Œuf de dragon', 'Peut éclore pour obtenir un bébé dragon.');
+
+-- Insertion du loot des ressources
+INSERT INTO loot_ressources (creature_id, ressource_id, probabilite) VALUES
+(1, 1, 0.7),  -- Gobelin → Peau de gobelin
+(2, 2, 0.6),  -- Loup → Griffe de loup
+(3, 3, 0.4),  -- Griffon → Plume de griffon
+(4, 4, 0.6),  -- Dragon → Écaille de dragon
+(4, 6, 0.01), -- Dragon → Œuf de dragon
+(5, 5, 0.3);  -- Phénix → Cendre de phénix
+
+-- Insertion de recettes
+INSERT INTO recettes (nom, description) VALUES
+('Épée du Loup', 'Arme légère fabriquée avec des griffes de loup.'),
+('Armure draconique', 'Armure lourde fabriquée avec des écailles de dragon.'),
+('Potion de renaissance', 'Potion rare fabriquée avec de la cendre de phénix.');
+
+-- Ressources nécessaires pour les recettes
+INSERT INTO recette_ressources (recette_id, ressource_id, quantite) VALUES
+(1, 2, 5),  -- Épée du Loup → 5 Griffes de loup
+(2, 4, 10), -- Armure draconique → 10 Écailles de dragon
+(3, 5, 3);  -- Potion de renaissance → 3 Cendres de phénix
 ```
+
+---
+
+## 1️⃣ Structure des dossiers
+
+```
+/chasse-monstres
+│
+│── index.php          # Point d'entrée (front controller)
+│── .htaccess          # Réécriture d'URL pour Apache
+│
+├── app
+│   ├── core
+│   │   ├── Router.php     # Gestion des routes
+│   │   ├── Controller.php # Classe de base pour les controllers
+│   │   ├── Model.php      # Classe de base pour les models (PDO)
+│   │   └── Database.php   # Connexion PDO
+│   │
+│   ├── controllers
+│   │   ├── ChasseController.php
+│   │   ├── JoueurController.php
+│   │   ├── CreatureController.php
+│   │   └── GuildeController.php
+│   │
+│   ├── models
+│   │   ├── Joueur.php
+│   │   ├── Creature.php
+│   │   ├── Capture.php
+│   │   ├── Ressource.php
+│   │   └── Guilde.php
+│   │
+│   ├── views
+│   │   ├── layout.php         # Template principal
+│   │   ├── chasse
+│   │   │   └── index.php
+│   │   ├── joueur
+│   │   │   ├── profil.php
+│   │   │   └── login.php
+│   │   └── creature
+│   │       └── liste.php
+│   │
+│   └── config
+│       └── config.php     # Paramètres globaux
+```
+
+---
+
+## 2️⃣ Exemple Fichiers clés
+
+### `index.php`
+
+```php
+<?php
+require_once __DIR__ . '/app/core/Router.php';
+require_once __DIR__ . '/app/config/config.php';
+
+$router = new Router();
+$router->dispatch();
+```
+
+---
+
+### `.htaccess`
+
+```apache
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [QSA,L]
+```
+
+---
+
+### `app/config/config.php`
+
+```php
+<?php
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'chasse_monstres');
+define('DB_USER', 'root');
+define('DB_PASS', '');
+define('BASE_URL', '/');
+```
+
+---
+
+### `app/core/Database.php`
+
+```php
+<?php
+class Database {
+    private static $instance = null;
+    public static function getConnection() {
+        if (self::$instance === null) {
+            $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8";
+            self::$instance = new PDO($dsn, DB_USER, DB_PASS);
+            self::$instance->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        }
+        return self::$instance;
+    }
+}
+```
+
+---
+
+### `app/core/Router.php`
+
+```php
+<?php
+class Router {
+    public function dispatch() {
+        $url = isset($_GET['url']) ? explode('/', rtrim($_GET['url'], '/')) : [];
+        $controllerName = !empty($url[0]) ? ucfirst($url[0]) . 'Controller' : 'ChasseController';
+        $method = $url[1] ?? 'index';
+        $params = array_slice($url, 2);
+
+        $controllerFile = __DIR__ . '/../controllers/' . $controllerName . '.php';
+
+        if (file_exists($controllerFile)) {
+            require_once $controllerFile;
+            $controller = new $controllerName();
+            if (method_exists($controller, $method)) {
+                call_user_func_array([$controller, $method], $params);
+            } else {
+                echo "Méthode $method introuvable.";
+            }
+        } else {
+            echo "Contrôleur $controllerName introuvable.";
+        }
+    }
+}
+```
+
+---
+
+### `app/core/Controller.php`
+
+```php
+<?php
+class Controller {
+    protected function view($view, $data = []) {
+        extract($data);
+        require_once __DIR__ . '/../views/' . $view . '.php';
+    }
+
+    protected function model($model) {
+        require_once __DIR__ . '/../models/' . $model . '.php';
+        return new $model();
+    }
+}
+```
+
+---
+
+### `app/core/Model.php`
+
+```php
+<?php
+class Model {
+    protected $db;
+    public function __construct() {
+        $this->db = Database::getConnection();
+    }
+}
+```
+
+---
+
+### `app/controllers/ChasseController.php`
+
+```php
+<?php
+class ChasseController extends Controller {
+    public function index() {
+        $creatureModel = $this->model('Creature');
+        $creatures = $creatureModel->getAll();
+        $this->view('chasse/index', ['creatures' => $creatures]);
+    }
+}
+```
+
+---
+
+### `app/models/Creature.php`
+
+```php
+<?php
+class Creature extends Model {
+    public function getAll() {
+        $query = $this->db->query("SELECT * FROM creatures");
+        return $query->fetchAll(PDO::FETCH_ASSOC);
+    }
+}
+```
+
+---
+
+### `app/views/chasse/index.php`
+
+```php
+<?php include __DIR__ . '/../layout.php'; ?>
+
+<div class="p-6">
+    <h1 class="text-2xl font-bold mb-4">Chasse aux monstres</h1>
+    <ul>
+        <?php foreach ($creatures as $creature): ?>
+            <li class="border p-2 mb-2 rounded">
+                <?= htmlspecialchars($creature['nom']) ?> - Rareté: <?= htmlspecialchars($creature['rarete']) ?>
+            </li>
+        <?php endforeach; ?>
+    </ul>
+</div>
+```
+
+---
