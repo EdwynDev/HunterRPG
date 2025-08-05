@@ -365,7 +365,7 @@ CREATE TABLE joueurs (
     niveau INT DEFAULT 1,
     rang_guilde_id INT,
     exp_guilde INT DEFAULT 0,
-    or INT DEFAULT 0,
+    ors INT DEFAULT 0,
     date_inscription DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (rang_guilde_id) REFERENCES guildes(id)
 );
@@ -505,7 +505,7 @@ INSERT INTO creatures (nom, rarete, niveau_max, description) VALUES
 
 -- Insertion de ressources
 INSERT INTO ressources (nom, description) VALUES
-('Peau de gobelin', 'Matériau de base pour l'artisanat.'),
+('Peau de gobelin', 'Matériau de base pour artisanat.'),
 ('Griffe de loup', 'Utilisée pour fabriquer des armes légères.'),
 ('Plume de griffon', 'Ressource rare utilisée pour des objets magiques.'),
 ('Écaille de dragon', 'Matériau solide pour armures puissantes.'),
@@ -611,9 +611,9 @@ RewriteRule ^ index.php [QSA,L]
 ```php
 <?php
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'chasse_monstres');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+define('DB_NAME', 'u316670446_hunterrpg');
+define('DB_USER', 'u316670446_hunterrpg');
+define('DB_PASS', '6H40G+bK');
 define('BASE_URL', '/');
 ```
 
