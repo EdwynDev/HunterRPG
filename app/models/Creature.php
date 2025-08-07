@@ -2,7 +2,52 @@
 require_once __DIR__ . '/../core/Model.php';
 
 class Creature extends Model {
-    
+    private $id;
+    private $nom;
+    private $type;
+    private $rarete;
+    private $status;
+    private $points_vie;
+    private $attaque;
+    private $defense;
+    private $vitesse;
+    private $description;
+    private $image_url;
+
+    public function __construct($data = []) {
+        foreach ($data as $key => $value) {
+            if (property_exists($this, $key)) {
+                $this->$key = $value;
+            }
+        }
+    }
+
+    // Getters
+    public function getId() { return $this->id; }
+    public function getNom() { return $this->nom; }
+    public function getType() { return $this->type; }
+    public function getRarete() { return $this->rarete; }
+    public function getStatus() { return $this->status; }
+    public function getPointsVie() { return $this->points_vie; }
+    public function getAttaque() { return $this->attaque; }
+    public function getDefense() { return $this->defense; }
+    public function getVitesse() { return $this->vitesse; }
+    public function getDescription() { return $this->description; }
+    public function getImageUrl() { return $this->image_url; }
+
+    // Setters
+    public function setId($id) { $this->id = $id; }
+    public function setNom($nom) { $this->nom = $nom; }
+    public function setType($type) { $this->type = $type; }
+    public function setRarete($rarete) { $this->rarete = $rarete; }
+    public function setStatus($status) { $this->status = $status; }
+    public function setPointsVie($points_vie) { $this->points_vie = $points_vie; }
+    public function setAttaque($attaque) { $this->attaque = $attaque; }
+    public function setDefense($defense) { $this->defense = $defense; }
+    public function setVitesse($vitesse) { $this->vitesse = $vitesse; }
+    public function setDescription($description) { $this->description = $description; }
+    public function setImageUrl($image_url) { $this->image_url = $image_url; }
+
     public function getAll() {
         $query = "SELECT * FROM creatures ORDER BY 
                   CASE rarete 
