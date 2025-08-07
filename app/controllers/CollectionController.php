@@ -19,7 +19,7 @@ class CollectionController extends Controller {
         ]);
     }
     
-    public function view($id) {
+    public function viewCapture($id) {
         $this->requireLogin();
         
         $captureModel = $this->model('Capture');
