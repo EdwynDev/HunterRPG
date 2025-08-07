@@ -15,16 +15,7 @@ class Router {
             if (class_exists($controllerName)) {
                 $controller = new $controllerName();
                 if (method_exists($controller, $method)) {
-                    try {
-                        $reflection = new ReflectionMethod($controller, $method);
-                        if (!$reflection->isPublic()) {
-                            $this->error404("La méthode $method n'est pas accessible.");
-                            return;
-                        }
-                        call_user_func_array([$controller, $method], $params);
-                    } catch (Exception $e) {
-                        $this->error404("Erreur lors de l'appel de la méthode: " . $e->getMessage());
-                    }
+                    call_user_func_array([$controller, $method], $params);
                 } else {
                     $this->error404("Méthode $method introuvable.");
                 }
