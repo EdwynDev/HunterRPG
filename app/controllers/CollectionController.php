@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../core/Controller.php';
 
 class CollectionController extends Controller {
+    
     public function index() {
         $this->requireLogin();
         
