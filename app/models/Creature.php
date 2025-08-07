@@ -49,73 +49,62 @@ class Creature extends Model {
     public function setImageUrl($image_url) { $this->image_url = $image_url; }
 
     public function getAll() {
-        $query = "SELECT * FROM creatures ORDER BY 
-                  CASE rarete 
-                    WHEN 'commun' THEN 1
-                    WHEN 'peu_commun' THEN 2
-                    WHEN 'rare' THEN 3
-                    WHEN 'epique' THEN 4
-                    WHEN 'legendaire' THEN 5
-                  END, nom";
-        return $this->fetchAll($query);
-    }
-    
-    public function getById($id) {
-        $query = "SELECT * FROM creatures WHERE id = ?";
-        return $this->fetch($query, [$id]);
+        return $this->fetchAll("SELECT * FROM creatures");
     }
     
     public function getRandomCreature() {
         $creatures = $this->getAll();
-        $totalWeight = 0;
-        $weightedCreatures = [];
-        
-        foreach ($creatures as $creature) {
-            $weight = RARITY_PROBABILITIES[$creature['rarete']];
-            $totalWeight += $weight;
-            $weightedCreatures[] = [
-                'creature' => $creature,
-                'weight' => $totalWeight
-            ];
+        if (empty($creatures)) {
+            throw new Exception("No creatures found in database");
         }
         
-        $random = mt_rand() / mt_getrandmax() * $totalWeight;
+        $totalWeight = 0;
+        $weights = [];
         
-        foreach ($weightedCreatures as $weighted) {
-            if ($random <= $weighted['weight']) {
-                return $weighted['creature'];
+        foreach ($creatures as $creature) {
+            $weight = $this->getRarityWeight($creature['rarete']);
+            $weights[] = $weight;
+            $totalWeight += $weight;
+        }
+        
+        $random = mt_rand(1, $totalWeight);
+        $currentWeight = 0;
+        
+        foreach ($creatures as $index => $creature) {
+            $currentWeight += $weights[$index];
+            if ($random <= $currentWeight) {
+                return $creature;
             }
         }
         
         return $creatures[0]; // Fallback
     }
     
-    public function getCreatureWithLoot($creatureId) {
-        $query = "SELECT c.*, 
-                         GROUP_CONCAT(CONCAT(r.nom, ':', lr.probabilite) SEPARATOR '|') as loot_data
-                  FROM creatures c
-                  LEFT JOIN loot_ressources lr ON c.id = lr.creature_id
-                  LEFT JOIN ressources r ON lr.ressource_id = r.id
-                  WHERE c.id = ?
-                  GROUP BY c.id";
+    private function getRarityWeight($rarete) {
+        $weights = [
+            'commun' => 500,
+            'peu_commun' => 300,
+            'rare' => 150,
+            'epique' => 40,
+            'legendaire' => 10
+        ];
         
-        $result = $this->fetch($query, [$creatureId]);
+        return $weights[$rarete] ?? 500;
+    }
+    
+    public function getCreatureWithLoot($id) {
+        $creature = $this->fetch("SELECT * FROM creatures WHERE id = ?", [$id]);
+        if (!$creature) return null;
         
-        if ($result && $result['loot_data']) {
-            $lootItems = explode('|', $result['loot_data']);
-            $result['loot'] = [];
-            
-            foreach ($lootItems as $item) {
-                list($name, $probability) = explode(':', $item);
-                $result['loot'][] = [
-                    'nom' => $name,
-                    'probabilite' => floatval($probability)
-                ];
-            }
-        } else {
-            $result['loot'] = [];
-        }
+        $loot = $this->fetchAll(
+            "SELECT r.nom, lr.probabilite 
+            FROM loot_ressources lr 
+            JOIN ressources r ON lr.ressource_id = r.id 
+            WHERE lr.creature_id = ?",
+            [$id]
+        );
         
-        return $result;
+        $creature['loot'] = $loot;
+        return $creature;
     }
 }
