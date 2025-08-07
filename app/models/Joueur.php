@@ -63,6 +63,6 @@ class Joueur extends Model {
                   GROUP BY j.id
                   ORDER BY j.rang_guilde_id DESC, j.exp_guilde DESC
                   LIMIT ?";
-        return $this->fetchAll($query, [$limit]);
+        return $this->fetchAll($query, [intval($limit)]);
     }
 }
