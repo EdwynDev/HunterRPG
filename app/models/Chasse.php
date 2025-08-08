@@ -88,10 +88,16 @@ class Chasse extends Model {
         $creatureModel = new Creature();
         $creatureWithLoot = $creatureModel->getCreatureWithLoot($creatureData['creature']['id']);
         
+        $ressourceModel = new Ressource();
+        
         foreach ($creatureWithLoot['loot'] as $loot) {
             if ((mt_rand() / mt_getrandmax()) <= $loot['probabilite']) {
-                $rewards['resources'][] = $loot['nom'];
-                // TODO: Ajouter à l'inventaire du joueur
+                $rewards['resources'][] = [
+                    'nom' => $loot['nom'],
+                    'quantite' => 1
+                ];
+                // Ajouter à l'inventaire du joueur
+                $ressourceModel->addToInventory($joueurId, $loot['ressource_id'], 1);
             }
         }
         

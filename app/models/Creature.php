@@ -47,7 +47,7 @@ class Creature extends Model {
     
     public function getCreatureWithLoot($creatureId) {
         $query = "SELECT c.*, 
-                         GROUP_CONCAT(CONCAT(r.nom, ':', lr.probabilite) SEPARATOR '|') as loot_data
+                         GROUP_CONCAT(CONCAT(r.id, ':', r.nom, ':', lr.probabilite) SEPARATOR '|') as loot_data
                   FROM creatures c
                   LEFT JOIN loot_ressources lr ON c.id = lr.creature_id
                   LEFT JOIN ressources r ON lr.ressource_id = r.id
@@ -61,8 +61,9 @@ class Creature extends Model {
             $result['loot'] = [];
             
             foreach ($lootItems as $item) {
-                list($name, $probability) = explode(':', $item);
+                list($ressourceId, $name, $probability) = explode(':', $item);
                 $result['loot'][] = [
+                    'ressource_id' => intval($ressourceId),
                     'nom' => $name,
                     'probabilite' => floatval($probability)
                 ];
